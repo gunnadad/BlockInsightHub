@@ -1,0 +1,95 @@
+# BlockInsightHub.py
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import requests
+from datetime import datetime
+from typing import Dict, Any
+
+class BlockInsightHub:
+    def __init__(self, api_base_url: str):
+        self.api_base_url = api_base_url
+        self.data = pd.DataFrame()
+
+    def fetch_data(self, endpoint: str) -> Dict[str, Any]:
+        """
+        Fetch data from a specific API endpoint.
+        """
+        url = f"{self.api_base_url}/{endpoint}"
+        response = requests.get(url)
+        return response.json()
+
+    def load_data(self, endpoint: str):
+        """
+        Load data into the DataFrame from a specific API endpoint.
+        """
+        data = self.fetch_data(endpoint)
+        self.data = pd.json_normalize(data)
+        print(f"Data loaded from endpoint: {endpoint}")
+
+    def analyze_trends(self):
+        """
+        Analyze trends in the data.
+        """
+        if self.data.empty:
+            raise ValueError("Data is not loaded.")
+        
+        trend = self.data['trend'].value_counts().idxmax()
+        print(f"Current dominant trend: {trend}")
+
+    def plot_trends(self):
+        """
+        Plot trends in the data.
+        """
+        if self.data.empty:
+            raise ValueError("Data is not loaded.")
+        
+        trends = self.data['trend'].value_counts()
+        
+        plt.figure(figsize=(10, 6))
+        trends.plot(kind='bar', color='skyblue')
+        plt.xlabel('Trend')
+        plt.ylabel('Count')
+        plt.title('Trend Analysis')
+        plt.grid(True)
+        plt.show()
+
+    def generate_report(self) -> Dict[str, Any]:
+        """
+        Generate a report on the data.
+        """
+        if self.data.empty:
+            raise ValueError("Data is not loaded.")
+        
+        trends = self.data['trend'].value_counts()
+        dominant_trend = trends.idxmax()
+        total_trends = trends.sum()
+        
+        report = {
+            'dominant_trend': dominant_trend,
+            'total_trends': total_trends,
+            'trend_distribution': trends.to_dict()
+        }
+        
+        return report
+
+# Example usage
+if __name__ == "__main__":
+    api_base_url = 'https://api.example.com'  # Example base URL
+    block_insight_hub = BlockInsightHub(api_base_url)
+    
+    # Load data from a specific endpoint (example endpoint: 'blockchain_data')
+    block_insight_hub.load_data(endpoint='blockchain_data')
+    
+    # Analyze trends in the data
+    block_insight_hub.analyze_trends()
+    
+    # Plot trends in the data
+    block_insight_hub.plot_trends()
+    
+    # Generate and print a report
+    report = block_insight_hub.generate_report()
+    print("Block Insight Hub Report:")
+    for key, value in report.items():
+        print(f"{key}: {value}")
